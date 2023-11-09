@@ -1,0 +1,42 @@
+version: "3"
+services:
+  
+  db:
+    
+    image: mysql:8.0
+    container_name: dockerMySQL
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: todo_sql
+      MYSQL_USER: todo_backend
+      MYSQL_PASSWORD: password
+      TZ: "Asia/Tokyo"
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+    ports:
+      - 3306:3306
+  api:
+    build:
+      context: ./todo_backend/
+      dockerfile: Dockerfile
+    command: /bin/sh -c "sleep 3 && go run main.go"
+    volumes:
+      - ./todo_backend:/myapp
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+  front:
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/usr/src/app
+    command: sh -c "cd react-app && yarn start"
+    ports:
+      - "3000:3000"
+volumes:
+  db-data:
+    driver: local
